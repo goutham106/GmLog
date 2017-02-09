@@ -56,6 +56,7 @@ public class XmlLog {
                 Log.d(tag, "║ " + line);
             }
         }
+
         Util.printLine(tag, false);
     }
 
