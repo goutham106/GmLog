@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.gm.log.log;
+package com.gm.glog.library.log;
 
 import android.util.Log;
 
-import com.gm.log.GLog;
-import com.gm.log.Util;
+import com.gm.glog.library.GLog;
+import com.gm.glog.library.Util;
 
 import java.io.StringReader;
 import java.io.StringWriter;

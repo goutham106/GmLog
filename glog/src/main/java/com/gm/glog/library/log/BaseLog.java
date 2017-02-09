@@ -15,11 +15,11 @@
  */
 
 
-package com.gm.log.log;
+package com.gm.glog.library.log;
 
 import android.util.Log;
 
-import com.gm.log.GLog;
+import com.gm.glog.library.GLog;
 
 /**
  * Name       : Gowtham

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.gm.log.log;
+package com.gm.glog.library.log;
 
 import android.util.Log;
 

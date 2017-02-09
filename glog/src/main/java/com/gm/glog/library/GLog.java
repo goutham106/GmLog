@@ -15,14 +15,14 @@
  */
 
 
-package com.gm.log;
+package com.gm.glog.library;
 
 import android.text.TextUtils;
 
-import com.gm.log.log.BaseLog;
-import com.gm.log.log.FileLog;
-import com.gm.log.log.JsonLog;
-import com.gm.log.log.XmlLog;
+import com.gm.glog.library.log.BaseLog;
+import com.gm.glog.library.log.FileLog;
+import com.gm.glog.library.log.JsonLog;
+import com.gm.glog.library.log.XmlLog;
 
 import java.io.File;
 
