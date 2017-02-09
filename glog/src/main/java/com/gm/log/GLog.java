@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 package com.gm.log;
 
 import android.text.TextUtils;
