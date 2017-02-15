@@ -62,7 +62,6 @@ android {
 
 dependencies {
 }
-
 apply from: 'https://raw.githubusercontent.com/goutham106/Jcentergradles/master/installv1.gradle'
 apply from: 'https://raw.githubusercontent.com/goutham106/Jcentergradles/master/bintrayv1.gradle'
 
