@@ -16,8 +16,13 @@
 
 package com.gm.glog.library;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.gm.glog.library.format.LogFormat;
+import com.google.gson.GsonBuilder;
 
 /**
  * Name       : Gowtham
@@ -27,6 +32,9 @@ import android.util.Log;
  */
 
 public class Util {
+
+    private static final String HL_SHARED_PREFS_KEY = "com.gm.glog:SharedPreference";
+    private static final String HL_LOG_FORMAT_KEY = "com.gm.glog:LogFormat";
 
     public static boolean isEmpty(String line) {
         return TextUtils.isEmpty(line) || line.equals("\n") || line.equals("\t") || TextUtils.isEmpty(line.trim());
@@ -38,6 +46,35 @@ public class Util {
         } else {
             Log.d(tag, "╚═══════════════════════════════════════════════════════════════════════════════════════");
         }
+    }
+
+    public static void saveLogFormat(Context context, LogFormat logFormat) {
+        SharedPreferences.Editor editor = getSharedPreferencesEditor(context);
+        editor.putString(HL_LOG_FORMAT_KEY, new GsonBuilder().create().toJson(logFormat));
+        editor.apply();
+    }
+
+    public static LogFormat getLogFormat(Context context) {
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
+        String json = sharedPreferences.getString(HL_LOG_FORMAT_KEY, null);
+
+        if (json == null)
+            return new LogFormat(context);
+
+        LogFormat logFormat = new GsonBuilder().create().fromJson(json, LogFormat.class);
+
+        if (logFormat == null)
+            return new LogFormat(context);
+        else
+            return logFormat;
+    }
+
+    private static SharedPreferences getSharedPreferences(Context context) {
+        return context.getSharedPreferences(HL_SHARED_PREFS_KEY, Context.MODE_PRIVATE);
+    }
+
+    private static SharedPreferences.Editor getSharedPreferencesEditor(Context context) {
+        return getSharedPreferences(context).edit();
     }
 
 }

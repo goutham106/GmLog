@@ -17,14 +17,18 @@
 
 package com.gm.glog.library;
 
+import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
+import com.gm.glog.library.format.LogFormat;
 import com.gm.glog.library.log.BaseLog;
 import com.gm.glog.library.log.FileLog;
 import com.gm.glog.library.log.JsonLog;
 import com.gm.glog.library.log.XmlLog;
 
 import java.io.File;
+
 
 /**
  * Name       : Gowtham
@@ -35,6 +39,7 @@ import java.io.File;
 
 public class GLog {
 
+    private static final String TAG = "GmLog";
     public static final String DEFAULT_MESSAGE = "execute";
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     public static final String NULL_TIPS = "Log with null object";
@@ -42,6 +47,10 @@ public class GLog {
     public static final String NULL = "null";
     public static final String TAG_DEFAULT = "GLog";
     public static final String SUFFIX = ".java";
+    private static final int EXPIRY_FILE_SIZE = 1;// In MB
+    private static LogFormat mLogFormat;
+    private static Context context;
+    private static int logLevel = Log.WARN;
 
     public static final int JSON_INDENT = 4;
 
@@ -55,10 +64,80 @@ public class GLog {
     public static final int XML = 0x8;
 
     private static boolean IS_SHOW_LOG = true;
+    private static boolean IS_SAVING_DB = true;
     private static final int STACK_TRACE_INDEX = 5;
+    private static int FILE_SIZE_TO_EXPIRY;
 
     public static void init(boolean isShowLog) {
         IS_SHOW_LOG = isShowLog;
+    }
+
+    public static void init(Context context, boolean isShowLog, boolean isSaveDb) {
+        initialize(context, isShowLog, isSaveDb, EXPIRY_FILE_SIZE, new LogFormat(context));
+    }
+
+    public static void init(Context context, boolean isShowLog, boolean isSaveDb, int expiryFileSize) {
+        initialize(context, isShowLog, isSaveDb, expiryFileSize, new LogFormat(context));
+    }
+
+    public static void init(Context context, boolean isShowLog, boolean isSaveDb, int expiryFileSize, LogFormat logFormat) {
+        initialize(context, isShowLog, isSaveDb, expiryFileSize, logFormat);
+    }
+
+    public static void initialize(Context context, boolean isShowLog, boolean isSaveDb, int expiryFileSize, LogFormat logFormat) {
+
+        if (context == null) {
+            Log.e(TAG, "GLog isn't initialized: Context couldn't be null");
+            return;
+        }
+
+        GLog.context = context.getApplicationContext();
+
+        synchronized (GLog.class) {
+
+            if (logFormat != null) {
+                mLogFormat = logFormat;
+                Util.saveLogFormat(context, mLogFormat);
+            } else {
+                mLogFormat = Util.getLogFormat(context);
+            }
+
+            IS_SHOW_LOG = isShowLog;
+            IS_SAVING_DB = isSaveDb;
+            FILE_SIZE_TO_EXPIRY = expiryFileSize;
+        }
+    }
+
+    /**
+     * Sets the level of logging to display, where each level includes all those below it.
+     * The default level is LOG_LEVEL_NONE. Please ensure this is set to Log#ERROR
+     * or LOG_LEVEL_NONE before deploying your app to ensure no sensitive information is
+     * logged. The levels are:
+     * <ul>
+     * <li>{@link Log#ASSERT}</li>
+     * <li>{@link Log#VERBOSE}</li>
+     * <li>{@link Log#DEBUG}</li>
+     * <li>{@link Log#INFO}</li>
+     * <li>{@link Log#WARN}</li>
+     * <li>{@link Log#ERROR}</li>
+     * </ul>
+     *
+     * @param logLevel The level of logcat logging that Parse should do.
+     */
+    public static void setLogLevel(int logLevel) {
+        GLog.logLevel = logLevel;
+    }
+
+    /**
+     * Call this method to define a custom log message format.
+     *
+     * @param logFormat LogFormat to set custom log message format.
+     */
+    public static void setLogFormat(LogFormat logFormat) {
+        if (mLogFormat != null) {
+            mLogFormat = logFormat;
+            Util.saveLogFormat(context, logFormat);
+        }
     }
 
     public static void v() {
@@ -193,7 +272,7 @@ public class GLog {
 
     private static void printFile(String tagStr, File targetDirectory, String fileName, Object objectMsg) {
 
-        if (!IS_SHOW_LOG) {
+        if (!IS_SHOW_LOG && !IS_SAVING_DB) {
             return;
         }
 
@@ -202,7 +281,9 @@ public class GLog {
         String msg = contents[1];
         String headString = contents[2];
 
-        FileLog.printFile(tag, targetDirectory, fileName, headString, msg);
+//        FileLog.printFile(tag, targetDirectory, fileName, headString, msg);
+
+        FileLog.printFile(tag, targetDirectory, fileName, headString, getFormattedLog(logLevel, tag, msg), FILE_SIZE_TO_EXPIRY);
     }
 
     private static String[] wrapperContent(String tagStr, Object... objects) {
@@ -254,5 +335,19 @@ public class GLog {
         }
     }
 
+    private static boolean isInitialize() {
+        if (mLogFormat == null) {
+            init(context, true, false, EXPIRY_FILE_SIZE, null);
+            return false;
+        }
+        return true;
+    }
+
+    private static String getFormattedLog(int logLevel, String tag, String message) {
+        if (isInitialize()) {
+            return mLogFormat.formatLogMessage(logLevel, tag, message);
+        }
+        return null;
+    }
 
 }

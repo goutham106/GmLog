@@ -18,12 +18,12 @@ package com.gm.glog.library.log;
 
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
@@ -36,26 +36,36 @@ import java.util.Random;
 
 public class FileLog {
 
-    public static void printFile(String tag, File targetDirectory, String fileName, String headString, String msg) {
-
+    public static void printFile(String tag, File targetDirectory, String fileName, String headString, String msg, int fileSizeToExpiry) {
         fileName = (fileName == null) ? getFileName() : fileName;
-        if (save(targetDirectory, fileName, msg)) {
-            Log.d(tag, headString + " save log success ! location is >>>" + targetDirectory.getAbsolutePath() + "/" + fileName);
+        if (save(targetDirectory, fileName, msg, fileSizeToExpiry)) {
+            Log.d(tag, headString + "save log success !");
         } else {
             Log.e(tag, headString + "save log fails !");
         }
     }
 
-    private static boolean save(File dic, String fileName, String msg) {
 
+    private static boolean save(File dic, String fileName, String msg, int fileSizeToExpiry) {
         File file = new File(dic, fileName);
-
+        PrintWriter out = null;
         try {
-            OutputStream outputStream = new FileOutputStream(file);
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
-            outputStreamWriter.write(msg);
-            outputStreamWriter.flush();
-            outputStream.close();
+
+            long fileSizeInBytes = file.length();
+            // Convert the bytes to Kilobytes (1 KB = 1024 Bytes)
+            long fileSizeInKB = fileSizeInBytes / 1024;
+            // Convert the KB to MegaBytes (1 MB = 1024 KBytes)
+            long fileSizeInMB = fileSizeInKB / 1024;
+
+            if (fileSizeInMB > fileSizeToExpiry) {
+                file.delete();
+                file = new File(dic, fileName);
+            }
+
+            out = new PrintWriter(new BufferedWriter(new FileWriter(file.getAbsolutePath(), true)));
+            out.println(msg);
+            out.println("\n\r");
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return false;
@@ -68,8 +78,11 @@ public class FileLog {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        } finally {
+            if (out != null) {
+                out.close();
+            }
         }
-
         return true;
     }
 
@@ -77,6 +90,5 @@ public class FileLog {
         Random random = new Random();
         return "GLog_" + Long.toString(System.currentTimeMillis() + random.nextInt(10000)).substring(4) + ".txt";
     }
-
 
 }
